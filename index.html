@@ -47,7 +47,8 @@
         var $ = function (e) { return document.getElementById(e); };
         var cm = null;
         var timer = 0;
-        var isPlaying = false; 
+        var isPlaying = false; // 视频播放状态
+        var videoDuration = 0; // 视频时长
 
         var barrageList = [
             {
@@ -87,6 +88,10 @@
             //其他参数请在开发文档中查看
         });
 
+        player.on("loadedmetadata", function() { // 获取视频时长
+            videoDuration = Math.floor(player.duration())
+        })
+
         player.on("play", function (res) { //  开始播放
             if (cm != null) {
                 timer = setInterval(function () {
@@ -101,7 +106,8 @@
                clearTimeout(timer)
            }
         })
-
+     
+         
         $("commentCanvas").addEventListener("click", function() { // 点击弹幕区域
            isPlaying = !isPlaying;
            if (isPlaying) {
