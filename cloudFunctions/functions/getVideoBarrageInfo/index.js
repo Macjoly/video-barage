@@ -1,6 +1,6 @@
 const TLSSigAPIv2 = require('./TLSSigAPIv2');
-const SDKAPPID = 1400504130;
-const api = new TLSSigAPIv2.Api(SDKAPPID, '129bd80a7ce91d8dcadc71b626388c260edba41e9f5e526d5e000e785952797c');
+const SDKAPPID = 0;
+const api = new TLSSigAPIv2.Api(SDKAPPID, '您的SECRETKEY');
 const adminSig = api.genUserSig('administrator', 604800); // 管理员签名默认7天
 
 const axios = require('axios')
@@ -37,6 +37,7 @@ let getMessageList = async (GroupId, ReqMsgSeq) => {
         reqData.ReqMsgSeq = ReqMsgSeq
     }
 
+    // 服务端拉取消息 
     const { data } = await axios({
         method: 'post',
         url: `https://console.tim.qq.com/v4/group_open_http_svc/group_msg_get_simple?usersig=${adminSig}&identifier=administrator&sdkappid=${SDKAPPID}&contenttype=json`,
