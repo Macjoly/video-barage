@@ -1,0 +1,25 @@
+{
+  "version": "2.0",
+  "envId": "hello-cloudbase-6gaa7fm3ca7687d3",
+  "$schema": "https://framework-1258016615.tcloudbaseapp.com/schema/latest.json",
+  "functionRoot": "./functions",
+  "functions": [
+    {
+      "name": "getVideoBarrageInfo",
+      "timeout": 5,
+      "envVariables": {},
+      "runtime": "Nodejs10.15",
+      "memorySize": 128,
+      "handler": "index.main"
+    }
+  ],
+  "framework": {
+    "name": "node-starter",
+    "plugins": {
+      "function": {
+        "use": "@cloudbase/framework-plugin-function",
+        "inputs": {}
+      }
+    }
+  }
+}
