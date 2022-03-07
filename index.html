@@ -15,9 +15,17 @@
     <script src="https://web.sdk.qcloud.com/player/tcplayer/release/v4.5.1/libs/hls.min.0.13.2m.js"></script>
     <!--播放器脚本文件-->
     <script src="https://web.sdk.qcloud.com/player/tcplayer/release/v4.5.1/tcplayer.v4.5.1.min.js"></script>
+    <!-- 云开发 -->
+    <script src="https://imgcache.qq.com/qcloud/cloudbase-js-sdk/1.6.0/cloudbase.full.js"></script>
 
-    <link rel="stylesheet" href="./lib/css/style.css">
-    <script src="./lib/CommentCoreLibrary.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
+        crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="./lib/ccl/css/style.css">
+    <script src="./lib/ccl/CommentCoreLibrary.js"></script>
+    <script src="./lib/tim/tim-js.js"></script>
     <style>
         .container {
             position: absolute;
@@ -25,109 +33,254 @@
             height: 342px;
             z-index: 1;
         }
+
+        .input-group {
+            width: 700px;
+            margin-top: 30px;
+        }
     </style>
 </head>
 
 <body>
-    <div class="abp">
-        <div id="commentCanvas" class="container"></div>
-        <!-- 设置播放器容器 -->
-        <video id="player-container-id" preload="auto" width="700" height="392" playsinline webkit-playsinline
-            x5-playsinline></video>
-        <!--
-            注意事项：
-            * 播放器容器必须为 video 标签
-            * player-container-id 为播放器容器的ID，可自行设置
-            * 播放器区域的尺寸请按需设置，建议通过 css 进行设置，通过css可实现容器自适应等效果
-            * playsinline webkit-playsinline x5-playsinline 这几个属性是为了在标准移动端浏览器不劫持视频播放的情况下实现行内播放，此处仅作示例，请按需使用
-            -->
+    <div class="container-box">
+        <div class="abp">
+            <div id="commentCanvas" class="container"></div>
+            <!-- 设置播放器容器 -->
+            <video id="player-container-id" preload="auto" width="700" height="392" playsinline webkit-playsinline
+                x5-playsinline></video>
+            <!--
+                注意事项：
+                * 播放器容器必须为 video 标签
+                * player-container-id 为播放器容器的ID，可自行设置
+                * 播放器区域的尺寸请按需设置，建议通过 css 进行设置，通过css可实现容器自适应等效果
+                * playsinline webkit-playsinline x5-playsinline 这几个属性是为了在标准移动端浏览器不劫持视频播放的情况下实现行内播放，此处仅作示例，请按需使用
+                -->
+        </div>
+        <div class="input-group">
+            <input type="text" class="form-control" id="message" placeholder="发送消息">
+            <button class="btn btn-outline-secondary" onclick="sendMessage()" type="button">发送</button>
+        </div>
     </div>
 
+
     <script>
-        var $ = function (e) { return document.getElementById(e); };
-        var cm = null;
-        var timer = 0;
-        var isPlaying = false; // 视频播放状态
-        var videoDuration = 0; // 视频时长
+        const $ = function (e) { return document.getElementById(e); };
+        let cm = null;
+        let timer = 0;
+        let currentTime = 0;
+        let interTime = 0; // 每个弹幕间隔时间
+        let isPlaying = false; // 视频播放状态
+        let videoDuration = 0; // 视频时长
+        let barrageList = []; // 弹幕列表
+        let fileID = "7447398157015849771";
+        let isSDKReady = false
 
-        var barrageList = [
-            {
-                "mode": 1,
-                "text": "Hello World",
-                "stime": 20,
-                "size": 25,
-                "color": 0xff0000
-            },
-            {
-                "mode": 1,
-                "text": "Hello World 333333",
-                "stime": 30,
-                "size": 25,
-                "color": 0xff0000
-            },
-            {
-                "mode": 1,
-                "text": "Hello World 444",
-                "stime": 40,
-                "size": 25,
-                "color": 0xff0000
-            },
-            {
-                "mode": 1,
-                "text": "Hello World 555",
-                "stime": 50,
-                "size": 25,
-                "color": 0xff0000
-            }
-        ] // 弹幕列表
+        const tim = TIM.create({
+            SDKAppID: 1400504130
+        });
+        let userID = 'user0';
+        let userSig = '';
+        let groupID = ''
 
-        var player = TCPlayer("player-container-id", { // player-container-id 为播放器容器ID，必须与html中一致
-            fileID: "7447398157015849771", // 请传入需要播放的视频fileID 必须
+        const app = cloudbase.init({
+            env: 'hello-cloudbase-6gaa7fm3ca7687d3' // 您的环境id
+        })
+        let cloudUserName = 'dagon_zl169';
+        let cloudUserPassword = '12345678wyg';
+        let isBaseLogin = false;
+
+        // ===========================  Tcplayer部分 =====================================================
+
+        let player = TCPlayer("player-container-id", { // player-container-id 为播放器容器ID，必须与html中一致
+            fileID, // 请传入需要播放的视频fileID 必须
             appID: "1256993030", // 请传入点播账号的子应用appID 必须
             autoplay: false //是否自动播放
             //其他参数请在开发文档中查看
         });
 
-        player.on("loadedmetadata", function() { // 获取视频时长
-            videoDuration = Math.floor(player.duration())
+        player.on("loadedmetadata", function () { // 获取视频时长
+            videoDuration = Math.floor(player.duration() * 1000)
         })
 
         player.on("play", function (res) { //  开始播放
             if (cm != null) {
                 timer = setInterval(function () {
                     cm.time(Math.round(player.currentTime() * 1000));
-                }, 10);
+                }, 100);
             }
             cm.start();
         })
         player.on("pause", function () { // 暂停
-           if(cm != null) {
-               cm.stop();
-               clearTimeout(timer)
-           }
+            if (cm != null) {
+                cm.stop();
+                clearTimeout(timer)
+            }
         })
-     
-         
-        $("commentCanvas").addEventListener("click", function() { // 点击弹幕区域
-           isPlaying = !isPlaying;
-           if (isPlaying) {
-               player.play();
-           } else {
-               player.pause();
-           }
+
+        // =========================================   CCL部分 ===================================== 
+
+        $("commentCanvas").addEventListener("click", function () { // 点击弹幕区域
+            isPlaying = !isPlaying;
+            if (isPlaying) {
+                player.play();
+            } else {
+                player.pause();
+            }
         })
 
         window.addEventListener("load", function () {
             cm = new CommentManager($("commentCanvas"))
             cm.init()
-
-            cm.load(barrageList)
             cm.start()
             if (timer) {
                 clearTimeout(timer)
             }
             cm.clear()
         })
+        function handleMessageArr(messageArr) {
+            barrageList = []
+            interTime = Math.floor(videoDuration / messageArr.length)
+            messageArr.forEach(handleTextMessaageToBarrage)
+            cm.load(barrageList)
+        }
+        function handleTextMessaageToBarrage(text) {
+            const barrage = {
+                "mode": 1,
+                "text": text,
+                "stime": currentTime,
+                "size": 25,
+                "color": 0xFFFFFF
+            }
+            currentTime = currentTime + interTime
+            barrageList.push(barrage)
+        }
+
+        function hanldeLiveMessageToBarage(text) {
+            const barrage = {
+                "mode": 1,
+                "text": text,
+                "stime": 0,
+                "size": 25,
+                "color": 0x7c8f2d
+            }
+            cm.send(barrage)
+        } 
+        // =========================================  TIM部分 ===================================== 
+
+        // if (!tim) tim = TIM.create(options);
+        tim.setLogLevel(0); // 普通级别，日志量较多，接入时建议使用
+
+        // 这里可以用field 和 userID 从后台获取用户签名,群ID，历史弹幕消息（群历史消息）
+        getUserSignAndHistoryBarrage()
+
+
+        function handleTIMInitAndLogin() {
+            // 云开发登录成功后初始化TIM监听和登录
+            initListener();
+            let promise = tim.login({ userID, userSig });
+            promise.then(function (imResponse) {
+                // console.log(imResponse.data); // 登录成功
+                if (imResponse.data.repeatLogin === true) {
+                    // 标识账号已登录，本次登录操作为重复登录。v2.5.1 起支持
+                    console.log(imResponse.data.errorInfo);
+                }
+            }).catch(function (imError) {
+                console.warn('login error:', imError); // 登录失败的相关信息
+            });
+        }
+        // 监听TIM事件
+        function initListener() {
+            // 登录成功后会触发 SDK_READY 事件，该事件触发后，可正常使用 SDK 接口
+            tim.on(TIM.EVENT.SDK_READY, onReadyStateUpdate)
+            // SDK NOT READT
+            tim.on(TIM.EVENT.SDK_NOT_READY, onReadyStateUpdate)
+            // 被踢出
+            tim.on(TIM.EVENT.KICKED_OUT, onKickOut)
+            // SDK内部出错
+            tim.on(TIM.EVENT.ERROR, onError)
+            // 收到新消息
+            tim.on(TIM.EVENT.MESSAGE_RECEIVED, onReceiveMessage)
+            // 网络监测
+            tim.on(TIM.EVENT.NET_STATE_CHANGE, onNetStateChange)
+        }
+
+        let onReadyStateUpdate = function ({ name }) {
+            isSDKReady = name === this.TIM.EVENT.SDK_READY ? true : false
+
+        }
+
+        let onKickOut = function (event) {
+            console.warn(`${event.data.type}被踢出，请重新登录`)
+        }
+
+        let onError = function ({ data }) {
+            console.error(data.message)
+        }
+
+        let onReceiveMessage = function ({ data: messageList }) {
+        }
+
+        let onNetStateChange = function (event) {
+            console.info(event.data.state)
+        }
+        let sendMessage = function () {
+            const inputDom = $('message')
+            const text = inputDom.value
+            if (isSDKReady) {
+                // 发送文本消息，Web 端与小程序端相同
+                // 1. 创建消息实例，接口返回的实例可以上屏
+                let message = tim.createTextMessage({
+                    to: groupID,
+                    conversationType: TIM.TYPES.CONV_GROUP,
+                    payload: {
+                        text,
+                    },
+                });
+                // 2. 发送消息
+                let promise = tim.sendMessage(message);
+                promise.then(function (imResponse) {
+                   hanldeLiveMessageToBarage(text)
+                   inputDom.value = ''
+                }).catch(function (imError) {
+                    // 发送失败
+                    console.warn('sendMessage error:', imError);
+                });
+            } else {
+                alert("您还未登录，请稍后再试")
+            }
+        }
+        function getUserSignAndHistoryBarrage() {
+            // 由于本demo和后台交互较少这里用的是云开发来实现
+            setTimeout(() => {
+                app.auth()
+                    .signInWithUsernameAndPassword(
+                        cloudUserName,
+                        cloudUserPassword
+                    ).then((loginState) => {
+                        // handleTIMInitAndLogin()
+                        isBaseLogin = true;
+                        getDataFromCloudBase()
+                    })
+            }, 1000)
+        }
+
+        function getDataFromCloudBase() {
+            app
+                .callFunction({
+                    name: "getVideoBarrageInfo",
+                    data: { userID, fileID },
+                })
+                .then((res) => {
+                    const { result } = res; //云函数执行结果
+                    if (result.status === 'ok') { // 返回了我们想要的结果
+                        userSig = result.userSig
+                        groupID = result.groupID
+                        handleTIMInitAndLogin()
+                        handleMessageArr(result.messageArr)
+                    }
+                    console.log(222, result);
+                });
+        }
 
     </script>
 </body>
