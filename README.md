@@ -1,10 +1,10 @@
-## 基于TIM + CCL 实现点播/直播解决方案
+## 基于TIM + CCL 实现点播/直播弹幕解决方案
 
 ### 说明
 本demo采用TIM进行弹幕消息管理，CCL(CommentCoreLibrary)进行页面弹幕展示，采用Tcplayer进行点播播放
 
 ### 效果展示
-<img src="https://miller-1c285a-1253985742.tcloudbaseapp.com/2022git/030801.gif" style="widht: 35%;">
+<img src="https://miller-1c285a-1253985742.tcloudbaseapp.com/2022git/030802.gif" style="widht: 35%;">
 
 ### [Demo线上地址](https://hello-cloudbase-6gaa7fm3ca7687d3-1257245868.tcloudbaseapp.com/video-barrage/index.html)
 
@@ -81,10 +81,11 @@
         }
  ```
  6. TIM群类型，建议使用加群简单能存储历史消息的类型
+ 7. 直播建议新建群，然后不用拉历史消息，直接实时展示弹幕消息
 
  ### 跑通Demo
- 1. 已经有TIM应用如果没有的话可以去腾讯云控制台创建个体验版应用，如果不清楚可以看[官网文档](https://cloud.tencent.com/document/product/269)。
- 2. 因为有和后端交互，和本demo相关的服务端相关代码在cloudFunctions仅供参考。
+ 1. 已经有TIM应用如果没有的话可以去腾讯云控制台创建个体验版应用，详情参考[官网文档](https://cloud.tencent.com/document/product/269)。
+ 2. 因为有和后端交互，和本demo相关的服务端相关代码在cloudFunctions目录下仅供参考。
  3. 基于1，只要后台能返回需要数据或者前端用mock数据也可以
  ```
   function getDataFromCloudBase() {
