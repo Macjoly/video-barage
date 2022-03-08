@@ -155,16 +155,16 @@
             barrageList.push(barrage)
         }
 
-        function hanldeLiveMessageToBarage(text) {
+        function hanldeLiveMessageToBarage(text, color) {
             const barrage = {
                 "mode": 1,
                 "text": text,
                 "stime": 0,
                 "size": 25,
-                "color": 0x7c8f2d
+                "color": color
             }
             cm.send(barrage)
-        } 
+        }
         // =========================================  TIM部分 ===================================== 
 
         // if (!tim) tim = TIM.create(options);
@@ -218,6 +218,10 @@
         }
 
         let onReceiveMessage = function ({ data: messageList }) {
+            if (messageList.length && messageList[0].type === 'TIMTextElem' && messageList[0].payload.text) {
+                const text = messageList[0].payload.text
+                hanldeLiveMessageToBarage(text, 0xd645dc)
+            }
         }
 
         let onNetStateChange = function (event) {
@@ -239,8 +243,8 @@
                 // 2. 发送消息
                 let promise = tim.sendMessage(message);
                 promise.then(function (imResponse) {
-                   hanldeLiveMessageToBarage(text)
-                   inputDom.value = ''
+                    hanldeLiveMessageToBarage(text, 0x7c8f2d)
+                    inputDom.value = ''
                 }).catch(function (imError) {
                     // 发送失败
                     console.warn('sendMessage error:', imError);
