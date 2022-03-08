@@ -4,7 +4,9 @@
 本demo采用TIM进行弹幕消息管理，CCL(CommentCoreLibrary)进行页面弹幕展示，采用Tcplayer进行点播播放
 
 ### 效果展示
-<img src="https://6865-hello-cloudbase-6gaa7fm3ca7687d3-1257245868.tcb.qcloud.la/images-gif/030801.gif" style="widht: 35%;">
+<img src="https://miller-1c285a-1253985742.tcloudbaseapp.com/2022git/030801.gif" style="widht: 35%;">
+
+### [Demo线上地址](https://hello-cloudbase-6gaa7fm3ca7687d3-1257245868.tcloudbaseapp.com/video-barrage/index.html)
 
 ### 思维导图
 
@@ -105,6 +107,8 @@
  4. 在vscode Live Server 上直接Open With Live Server
 
  ### 参考文档：
-CommentCoreLibrary: https://github.com/jabbany/CommentCoreLibrary
-TIM web文档: https://cloud.tencent.com/document/product/269/37411
-Tcplayer 文档: https://cloud.tencent.com/document/product/881/30818
+CommentCoreLibrary: https://github.com/jabbany/CommentCoreLibrary  
+
+TIM web文档: https://cloud.tencent.com/document/product/269/37411  
+
+Tcplayer 文档: https://cloud.tencent.com/document/product/881/30818  
