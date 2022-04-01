@@ -13,7 +13,7 @@
 <img src="https://miller-1c285a-1253985742.tcloudbaseapp.com/2022git/30703.png" style="widht: 45%;">
 
 ### 相关问题点设计思路
- 
+
  1.  关于TIM用户，demo用的是固定的userID，在实际使用中建议还是和业务的userID进行关联，不建议固定userID
 
  2. （服务端）关于弹幕条数，demo默认一个视频最多拉200条历史弹幕，这个可以根据实际情况调整（实时弹幕不计）
@@ -27,7 +27,7 @@
         reqData.ReqMsgSeq = ReqMsgSeq
     }
 
-    // 服务端拉取消息 
+    // 服务端拉取消息
     const { data } = await axios({
         method: 'post',
         url: `https://console.tim.qq.com/v4/group_open_http_svc/group_msg_get_simple?usersig=${adminSig}&identifier=administrator&sdkappid=${SDKAPPID}&contenttype=json`,
@@ -47,25 +47,48 @@
 }
  ```
  3. （服务端）在1的基础上，关于用户和群组的关系，需要判断用户是否在群中，如果不在的话，可以调restapi把该用户添加到群组，这样才能发送弹幕消息(鉴于时间和精力，本demo未做相关判断)
- 4. （前端）关于弹幕间隔，目前是根据拉取群历史消息的长度进行均匀分配，设计时长不合理可能会导致一下子把弹幕消息发完了，后面就空落落的，或者一直不出弹幕消息
+ 4. 关于视频内容和弹幕消息同步，所有弹幕消息都是通过自定义消息来实现，在发消息是记录下当前播放时间，然后装弹幕时用这个播放时间就能同步弹幕消息和视频内容了。
  ```
-         function handleMessageArr(messageArr) {
-            barrageList = []
-            interTime = Math.floor(videoDuration / messageArr.length)
-            messageArr.forEach(handleTextMessaageToBarrage)
-            cm.load(barrageList)
-        }
-        function handleTextMessaageToBarrage(text) {
-            const barrage = {
-                "mode": 1,
-                "text": text,
-                "stime": currentTime,
-                "size": 25,
-                "color": 0xFFFFFF
+ $("sendBtn").addEventListener("click", function () {
+    const inputDom = $('message')
+    const text = inputDom.value
+    const time = player.currentTime()
+    const messageObj = { text, time }
+    if (isSDKReady) {
+        // 通过发送自定义消息记录当前时间使消息和视频内容同步
+        let message = tim.createCustomMessage({
+            to: groupID,
+            conversationType: TIM.TYPES.CONV_GROUP,
+            payload: {
+                data: 'vodBarrageMessage', // 用于标识该消息是弹幕消息
+                description: JSON.stringify(messageObj), // 弹幕消息体
+                extension: ''
             }
-            currentTime = currentTime + interTime
-            barrageList.push(barrage)
-        }
+        });
+        // 2. 发送消息
+        let promise = tim.sendMessage(message);
+        promise.then(function (imResponse) {
+            hanldeLiveMessageToBarage(text, 0x7c8f2d)
+            inputDom.value = ''
+        }).catch(function (imError) {
+            // 发送失败
+            console.warn('sendMessage error:', imError);
+        });
+    } else {
+        alert("您还未登录，请稍后再试")
+    }
+})
+ // 拼装弹幕消息
+function handleCustomMessaageToBarrage(item) {
+    const barrage = {
+        "mode": 1,
+        "text": item.text,
+        "stime": Math.floor(item.time * 1000),
+        "size": 25,
+        "color": 0xFFFFFF
+    }
+    barrageList.push(barrage)
+}
  ```
  5. (前端) 关于弹幕的样式可以根据实际情况进行调整,如下面发送实时弹幕的样式是这样的
  ```
@@ -108,8 +131,8 @@
  4. 在vscode Live Server 上直接Open With Live Server
 
  ### 参考文档：
-CommentCoreLibrary: https://github.com/jabbany/CommentCoreLibrary  
+CommentCoreLibrary: https://github.com/jabbany/CommentCoreLibrary
 
-TIM web文档: https://cloud.tencent.com/document/product/269/37411  
+TIM web文档: https://cloud.tencent.com/document/product/269/37411
 
-Tcplayer 文档: https://cloud.tencent.com/document/product/881/30818  
+Tcplayer 文档: https://cloud.tencent.com/document/product/881/30818

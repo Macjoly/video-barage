@@ -67,7 +67,6 @@
         const $ = function (e) { return document.getElementById(e); };
         let cm = null;
         let timer = 0;
-        let currentTime = 0;
         let interTime = 0; // 每个弹幕间隔时间
         let isPlaying = false; // 视频播放状态
         let videoDuration = 0; // 视频时长
@@ -117,7 +116,7 @@
             }
         })
 
-        // =========================================   CCL部分 ===================================== 
+        // =========================================   CCL部分 =====================================
 
         $("commentCanvas").addEventListener("click", function () { // 点击弹幕区域
             isPlaying = !isPlaying;
@@ -137,21 +136,22 @@
             }
             cm.clear()
         })
+
         function handleMessageArr(messageArr) {
             barrageList = []
-            interTime = Math.floor(videoDuration / messageArr.length)
-            messageArr.forEach(handleTextMessaageToBarrage)
+            messageArr.forEach(handleCustomMessaageToBarrage)
             cm.load(barrageList)
         }
-        function handleTextMessaageToBarrage(text) {
+
+        // 拼装弹幕消息
+        function handleCustomMessaageToBarrage(item) {
             const barrage = {
                 "mode": 1,
-                "text": text,
-                "stime": currentTime,
+                "text": item.text,
+                "stime": Math.floor(item.time * 1000),
                 "size": 25,
                 "color": 0xFFFFFF
             }
-            currentTime = currentTime + interTime
             barrageList.push(barrage)
         }
 
@@ -165,7 +165,7 @@
             }
             cm.send(barrage)
         }
-        // =========================================  TIM部分 ===================================== 
+        // =========================================  TIM部分 =====================================
 
         // if (!tim) tim = TIM.create(options);
         tim.setLogLevel(0); // 普通级别，日志量较多，接入时建议使用
@@ -230,15 +230,18 @@
         let sendMessage = function () {
             const inputDom = $('message')
             const text = inputDom.value
+            const time = player.currentTime()
+            const messageObj = { text, time }
             if (isSDKReady) {
-                // 发送文本消息，Web 端与小程序端相同
-                // 1. 创建消息实例，接口返回的实例可以上屏
-                let message = tim.createTextMessage({
+                // 通过发送自定义消息记录当前时间使消息和视频内容同步
+                let message = tim.createCustomMessage({
                     to: groupID,
                     conversationType: TIM.TYPES.CONV_GROUP,
                     payload: {
-                        text,
-                    },
+                        data: 'vodBarrageMessage', // 用于标识该消息是弹幕消息
+                        description: JSON.stringify(messageObj), // 弹幕消息体
+                        extension: ''
+                    }
                 });
                 // 2. 发送消息
                 let promise = tim.sendMessage(message);

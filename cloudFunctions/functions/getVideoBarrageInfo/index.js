@@ -37,7 +37,7 @@ let getMessageList = async (GroupId, ReqMsgSeq) => {
         reqData.ReqMsgSeq = ReqMsgSeq
     }
 
-    // 服务端拉取消息 
+    // 服务端拉取消息
     const { data } = await axios({
         method: 'post',
         url: `https://console.tim.qq.com/v4/group_open_http_svc/group_msg_get_simple?usersig=${adminSig}&identifier=administrator&sdkappid=${SDKAPPID}&contenttype=json`,
@@ -72,8 +72,8 @@ exports.main = async (event) => {
             messageArr = messageArr.filter(item => !item.IsPlaceMsg)
             messageArr = messageArr.map(item => {
                 const msgBody = item.MsgBody
-                if (msgBody && msgBody.length && msgBody[0].MsgType === "TIMTextElem" && msgBody[0].MsgContent.Text) {
-                    return msgBody[0].MsgContent.Text
+                if (msgBody && msgBody.length && msgBody[0].MsgType === "TIMCustomElem" && msgBody[0].MsgContent.Data === "vodBarrageMessage" && msgBody[0].MsgContent.Desc) {
+                    return JSON.parse(msgBody[0].MsgContent.Desc)
                 }
             })
             responseVO.status = "ok"
