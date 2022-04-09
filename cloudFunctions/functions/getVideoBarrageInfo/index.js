@@ -69,12 +69,15 @@ exports.main = async (event) => {
         const groupID = await getGroupIDByFileID(event.fileID); // 返回groupID
         if (groupID) {
             let messageArr = await getMessageList(groupID)
-            messageArr = messageArr.filter(item => !item.IsPlaceMsg)
+            messageArr = messageArr.filter(item => {
+                const msgBody = item.MsgBody
+                if (!item.IsPlaceMsg && msgBody && msgBody.length && msgBody[0].MsgType === "TIMCustomElem" && msgBody[0].MsgContent.Data === "vodBarrageMessage" && msgBody[0].MsgContent.Desc) {
+                    return true
+                }
+            })
             messageArr = messageArr.map(item => {
                 const msgBody = item.MsgBody
-                if (msgBody && msgBody.length && msgBody[0].MsgType === "TIMCustomElem" && msgBody[0].MsgContent.Data === "vodBarrageMessage" && msgBody[0].MsgContent.Desc) {
-                    return JSON.parse(msgBody[0].MsgContent.Desc)
-                }
+                return JSON.parse(msgBody[0].MsgContent.Desc)
             })
             responseVO.status = "ok"
             responseVO.msg = "操作成功"

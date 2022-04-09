@@ -145,14 +145,16 @@
 
         // 拼装弹幕消息
         function handleCustomMessaageToBarrage(item) {
-            const barrage = {
-                "mode": 1,
-                "text": item.text,
-                "stime": Math.floor(item.time * 1000),
-                "size": 25,
-                "color": 0xFFFFFF
+            if (item && item.time) {
+                const barrage = {
+                    "mode": 1,
+                    "text": item.text,
+                    "stime": Math.floor(item.time * 1000),
+                    "size": 25,
+                    "color": 0xFFFFFF
+                }
+                barrageList.push(barrage)
             }
-            barrageList.push(barrage)
         }
 
         function hanldeLiveMessageToBarage(text, color) {
@@ -217,20 +219,35 @@
             console.error(data.message)
         }
 
-        let onReceiveMessage = function ({ data: messageList }) {
-            if (messageList.length && messageList[0].type === 'TIMTextElem' && messageList[0].payload.text) {
-                const text = messageList[0].payload.text
-                hanldeLiveMessageToBarage(text, 0xd645dc)
-            }
+        let onReceiveMessage = function ({ data: messageList }) { // 点播场景不建议
+            messageList.forEach(message => {
+                if (message.type === 'TIMCustomElem' && message.payload.data === 'vodBarrageMessage' && message.payload.description) {
+                    const { text, time } = JSON.parse(message.payload.description)
+                    const barrage = {
+                        "mode": 1,
+                        "text": text,
+                        "stime": Math.floor(time * 1000),
+                        "size": 25,
+                        "color": 0x204fc9
+                    }
+                    cm.insert(barrage)
+                }
+            });
         }
+
 
         let onNetStateChange = function (event) {
             console.info(event.data.state)
         }
+
         let sendMessage = function () {
             const inputDom = $('message')
             const text = inputDom.value
             const time = player.currentTime()
+            if (!time) {
+                alert("视频还未开播，请点击播放后再操作")
+                return // 如果没有开始播就不上弹幕
+            }
             const messageObj = { text, time }
             if (isSDKReady) {
                 // 通过发送自定义消息记录当前时间使消息和视频内容同步
@@ -256,6 +273,7 @@
                 alert("您还未登录，请稍后再试")
             }
         }
+
         function getUserSignAndHistoryBarrage() {
             // 由于本demo和后台交互较少这里用的是云开发来实现
             setTimeout(() => {
